@@ -1,4 +1,4 @@
-package com.marhasoft.basicauth.config.jwt;
+package com.marhasoft.basicauth.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -7,11 +7,14 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -24,9 +27,11 @@ public class JwtUtils {
     private String timeExpiration;
 
     //Codifica o token
-    public String genetareAccessToken(String login) {
+    public String generateAccessToken(User userDetail) {
         return Jwts.builder()
-                .setSubject(login)
+                .setSubject(userDetail.getUsername())
+                .claim("authorities", userDetail.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + Long.parseLong(timeExpiration)))
                 .signWith(getSignatureKey(), SignatureAlgorithm.HS256)
